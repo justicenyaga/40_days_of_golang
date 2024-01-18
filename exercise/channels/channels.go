@@ -14,9 +14,11 @@
 
 package main
 
-import "fmt"
-import "time"
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
 
 type Job int
 
@@ -35,7 +37,31 @@ func makeJobs() []Job {
 	return jobs
 }
 
+func runJob(results chan int, i Job) {
+	results <- longCalculation(i)
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	jobs := makeJobs()
+
+	resultsChan := make(chan int, 10)
+
+	for i := 0; i < len(jobs); i++ {
+		go runJob(resultsChan, jobs[i])
+	}
+
+	sum := 0
+	resultCount := 0
+
+	for {
+		result := <-resultsChan
+		sum += result
+		resultCount += 1
+		if resultCount == len(jobs) {
+			break
+		}
+	}
+
+	fmt.Println("sum is:", sum)
 }
